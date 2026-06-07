@@ -1,0 +1,38 @@
+{
+    "name": "philbaker/tinkerphel",
+    "description": "Tinkerwell-style Phel nREPL into a live Laravel application — eval Phel forms against your booted app from your editor (Conjure, etc.).",
+    "keywords": ["laravel", "phel", "nrepl", "repl", "lisp", "tinkerwell", "conjure"],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Phil Baker"
+        }
+    ],
+    "require": {
+        "php": "^8.2",
+        "illuminate/console": "^10.0 || ^11.0 || ^12.0",
+        "illuminate/contracts": "^10.0 || ^11.0 || ^12.0",
+        "illuminate/support": "^10.0 || ^11.0 || ^12.0",
+        "phel-lang/phel-lang": "^0.42"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^8.0 || ^9.0 || ^10.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Philbaker\\Tinkerphel\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Philbaker\\Tinkerphel\\TinkerphelServiceProvider"
+            ]
+        }
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
