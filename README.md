@@ -24,8 +24,8 @@ from a REPL but which the bare `phel nrepl` command does not provide.
 
 - PHP 8.2+
 - Laravel 10, 11 or 12
-- [`phel-lang/phel-lang`](https://github.com/phel-lang/phel-lang) `^0.42`
-- A `phel-config.php` in your project root (standard Phel setup)
+
+[Phel](https://github.com/phel-lang/phel-lang) (`^0.42`) is pulled in automatically as a dependency of this package
 
 ## Install
 
