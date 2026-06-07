@@ -33,11 +33,16 @@ final class PhelRepl
         PhelRuntime::bootstrap($basePath);
         PhelRuntime::setupRuntimeArgs('nrepl', []);
 
-        // Enable REPL semantics: re-evaluating (def …)/(defn …) redefines the
-        // symbol instead of throwing DuplicateDefinitionException. Set BEFORE
-        // loading namespaces so reloading an already-loaded ns doesn't throw.
-        // \Phel is the global facade (__callStatic -> Registry), distinct from
-        // the imported internal Phel\Phel.
+        $facade = new NreplFacade();
+        $facade->loadPhelNamespaces();
+
+        // Enable REPL semantics AFTER loading namespaces (same order as the
+        // built-in `phel repl`): re-evaluating (def …)/(defn …) then redefines
+        // the symbol instead of throwing DuplicateDefinitionException. Setting
+        // it *before* loadPhelNamespaces() makes Phel inject the project CWD
+        // into ns-resolution and derails the cold namespace load (hang / "Cannot
+        // resolve symbol 'comment'"). \Phel is the global facade (__callStatic
+        // -> Registry), distinct from the imported internal Phel\Phel.
         if ($allowRedefinition) {
             \Phel::addDefinition(
                 CompilerConstants::PHEL_CORE_NAMESPACE,
@@ -45,9 +50,6 @@ final class PhelRepl
                 true,
             );
         }
-
-        $facade = new NreplFacade();
-        $facade->loadPhelNamespaces();
 
         $server = $facade->createSocketServer($port, $host, $logger);
         $server->start();
