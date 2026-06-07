@@ -50,6 +50,30 @@ php artisan tinkerphel --no-redefinition    # keep Phel's duplicate-def guard
 
 Configure defaults via env: `TINKERPHEL_HOST`, `TINKERPHEL_PORT`.
 
+## Global install (use on any project without touching its composer)
+
+Don't want to add this to a shared project's `composer.json`/`composer.lock`?
+Install it once, globally, and run it as a standalone command in any Laravel
+project:
+
+```bash
+composer global require philbaker/tinkerphel   # brings Phel along too
+```
+
+Make sure Composer's global bin dir is on your `PATH` (commonly
+`~/.composer/vendor/bin`), then from any project root:
+
+```bash
+cd any-laravel-project
+tinkerphel                 # boots THIS project's Laravel, starts the nREPL
+tinkerphel --port=7899
+tinkerphel --host=0.0.0.0  # bind all interfaces (containers)
+```
+
+This leaves the project untouched: no `composer.json`/`composer.lock` change and
+no `.gitignore` change. Phel's cache is redirected to your system temp dir (via
+`GACELA_CACHE_DIR`), so no `.phel/` files are written into the working tree.
+
 ## Laravel Sail / Docker
 
 The nREPL runs inside the container, so it must bind `0.0.0.0` and the port must

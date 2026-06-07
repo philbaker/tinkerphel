@@ -23,6 +23,9 @@
             "Philbaker\\Tinkerphel\\": "src/"
         }
     },
+    "bin": [
+        "bin/tinkerphel"
+    ],
     "extra": {
         "laravel": {
             "providers": [

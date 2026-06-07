@@ -1,0 +1,79 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+use Illuminate\Contracts\Console\Kernel;
+use Philbaker\Tinkerphel\PhelRepl;
+
+/**
+ * Standalone Phel nREPL launcher. Designed for a global install:
+ *
+ *   composer global require philbaker/tinkerphel
+ *   cd any-laravel-project && tinkerphel
+ *
+ * It boots the Laravel app in the current working directory and starts the
+ * nREPL — without the package being a dependency of that project.
+ */
+
+// 1. Load this package's autoloader (brings in Phel + Tinkerphel classes).
+//    $_composer_autoload_path is provided by Composer's bin proxy; the
+//    fallbacks cover "installed as a dependency" and "standalone clone".
+$ownAutoload = null;
+foreach ([
+    $_composer_autoload_path ?? null,
+    __DIR__ . '/../../../autoload.php',
+    __DIR__ . '/../vendor/autoload.php',
+] as $candidate) {
+    if ($candidate !== null && is_file($candidate)) {
+        $ownAutoload = $candidate;
+        break;
+    }
+}
+
+if ($ownAutoload === null) {
+    fwrite(STDERR, "tinkerphel: could not locate the Composer autoloader.\n");
+    exit(1);
+}
+
+require $ownAutoload;
+
+// 2. Load the target project's autoloader LAST so its package versions win
+//    over anything in the global install (project Laravel beats global deps).
+$projectRoot = getcwd();
+$projectAutoload = $projectRoot . '/vendor/autoload.php';
+$bootstrap = $projectRoot . '/bootstrap/app.php';
+
+if (! is_file($projectAutoload) || ! is_file($bootstrap)) {
+    fwrite(STDERR, "tinkerphel: '{$projectRoot}' doesn't look like a Laravel project");
+    fwrite(STDERR, " (no vendor/autoload.php or bootstrap/app.php).\n");
+    fwrite(STDERR, "  Run tinkerphel from the root of a Laravel application.\n");
+    exit(1);
+}
+
+require $projectAutoload;
+
+// 3. Keep Phel's cache out of the project working tree (override-able).
+if (getenv('GACELA_CACHE_DIR') === false) {
+    putenv('GACELA_CACHE_DIR=' . sys_get_temp_dir() . '/phel-cache');
+}
+
+// 4. Options: --host / --port / --no-redefinition, with env fallbacks.
+$opts = getopt('', ['host:', 'port:', 'no-redefinition']);
+$host = $opts['host'] ?? (getenv('TINKERPHEL_HOST') ?: '127.0.0.1');
+$port = (int) ($opts['port'] ?? (getenv('TINKERPHEL_PORT') ?: 7888));
+$allowRedefinition = ! array_key_exists('no-redefinition', $opts);
+
+// 5. Boot Laravel, then serve.
+$app = require $bootstrap;
+$app->make(Kernel::class)->bootstrap();
+
+fwrite(STDERR, sprintf("tinkerphel — Laravel %s @ %s\n", $app->version(), $projectRoot));
+
+PhelRepl::serve(
+    $projectRoot,
+    $host,
+    $port,
+    $allowRedefinition,
+    static fn (string $line) => fwrite(STDERR, $line . PHP_EOL),
+);
