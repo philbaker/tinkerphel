@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Philbaker\Tinkerphel;
 
 use Phel\Nrepl\NreplFacade;
-use Phel\Phel as PhelRuntime;
 use Phel\Shared\CompilerConstants;
 use Phel\Shared\ReplConstants;
 
@@ -30,8 +29,14 @@ final class PhelRepl
     ): void {
         // Phel/Gacela must be bootstrapped before its facades are usable. Safe
         // to call even if the host app already bootstrapped Phel itself.
-        PhelRuntime::bootstrap($basePath);
-        PhelRuntime::setupRuntimeArgs('nrepl', []);
+        //
+        // Everything here goes through the global \Phel, which is Phel's
+        // documented public API. Its Phel\Phel base is marked @internal, and
+        // the stability policy covers the members it declares only as reached
+        // through the child — so importing the base directly would put us off
+        // the supported surface.
+        \Phel::bootstrap($basePath);
+        \Phel::setupRuntimeArgs('nrepl', []);
 
         $facade = new NreplFacade();
         $facade->loadPhelNamespaces();
@@ -50,9 +55,6 @@ final class PhelRepl
         // thing: ReplReferInjector adds the phel.repl alias and its refers
         // (doc, source, require, macroexpand-1, …) to each analysed namespace,
         // so those stay callable unqualified from the editor.
-        //
-        // \Phel is the global facade (__callStatic -> Registry), distinct from
-        // the imported internal Phel\Phel.
         if ($allowRedefinition) {
             \Phel::addDefinition(
                 CompilerConstants::PHEL_CORE_NAMESPACE,
