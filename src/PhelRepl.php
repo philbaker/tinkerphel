@@ -36,20 +36,36 @@ final class PhelRepl
         $facade = new NreplFacade();
         $facade->loadPhelNamespaces();
 
-        // Enable REPL semantics AFTER loading namespaces (same order as the
-        // built-in `phel repl`): re-evaluating (def …)/(defn …) then redefines
-        // the symbol instead of throwing DuplicateDefinitionException. Setting
-        // it *before* loadPhelNamespaces() makes Phel inject the project CWD
-        // into ns-resolution and derails the cold namespace load (hang / "Cannot
-        // resolve symbol 'comment'"). \Phel is the global facade (__callStatic
-        // -> Registry), distinct from the imported internal Phel\Phel.
+        // Enable interactive semantics AFTER loading namespaces, the same order
+        // the built-in `phel nrepl` uses: re-evaluating (def …)/(defn …) then
+        // redefines the symbol instead of throwing DuplicateDefinitionException.
+        //
+        // Redefinition needs *interactive-mode*, NOT *repl-mode*. Phel 0.50
+        // moved the duplicate-definition gate off *repl-mode* (which only
+        // `phel repl` sets) so `phel eval` and the nREPL server stopped raising
+        // on a re-definition the prompt accepts (#2896). Setting only
+        // *repl-mode* here would leave the guard armed, silently.
+        //
+        // *repl-mode* is still set alongside it, because it now does one other
+        // thing: ReplReferInjector adds the phel.repl alias and its refers
+        // (doc, source, require, macroexpand-1, …) to each analysed namespace,
+        // so those stay callable unqualified from the editor.
+        //
+        // \Phel is the global facade (__callStatic -> Registry), distinct from
+        // the imported internal Phel\Phel.
         if ($allowRedefinition) {
             \Phel::addDefinition(
                 CompilerConstants::PHEL_CORE_NAMESPACE,
-                ReplConstants::REPL_MODE,
+                ReplConstants::INTERACTIVE_MODE,
                 true,
             );
         }
+
+        \Phel::addDefinition(
+            CompilerConstants::PHEL_CORE_NAMESPACE,
+            ReplConstants::REPL_MODE,
+            true,
+        );
 
         $server = $facade->createSocketServer($port, $host, $logger);
         $server->start();

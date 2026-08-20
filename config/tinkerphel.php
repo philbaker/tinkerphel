@@ -36,8 +36,8 @@ return [
     |
     | Phel throws DuplicateDefinitionException when you redefine a symbol, to
     | catch accidental clobbering during file loads. That's the wrong default
-    | for an interactive REPL, so we enable Phel's *repl-mode* which permits
-    | re-evaluating (def …)/(defn …). Set to false to keep the guard.
+    | for an interactive REPL, so we enable Phel's *interactive-mode* which
+    | permits re-evaluating (def …)/(defn …). Set to false to keep the guard.
     |
     */
 
